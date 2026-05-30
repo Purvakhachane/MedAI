@@ -12,8 +12,29 @@
 ## 📸 Platform Interface Preview
 
 <div align="center">
-  <img src="https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=1200&q=80" alt="Medical Imaging Interface Banner" width="100%" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;" />
+  <img src="assets/dashboard.png" alt="Clinical Dashboard Preview" width="100%" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 </div>
+
+### 🗂️ Interactive Radiographic Workflow Modules
+
+<table style="width: 100%; border-collapse: collapse; border: none; background: transparent;">
+  <tr style="border: none; background: transparent;">
+    <td style="width: 50%; padding: 8px; border: none; text-align: center; background: transparent;">
+      <strong>1. DICOM Metadata Ingestion</strong><br/>
+      <img src="assets/upload.png" alt="DICOM Metadata Ingest" width="100%" style="border-radius: 8px; margin-top: 6px; border: 1px solid rgba(255,255,255,0.08);" />
+    </td>
+    <td style="width: 50%; padding: 8px; border: none; text-align: center; background: transparent;">
+      <strong>2. AI Medical Co-Pilot Reporting</strong><br/>
+      <img src="assets/reports.png" alt="AI Medical Reports & Co-Pilot" width="100%" style="border-radius: 8px; margin-top: 6px; border: 1px solid rgba(255,255,255,0.08);" />
+    </td>
+  </tr>
+  <tr style="border: none; background: transparent;">
+    <td colspan="2" style="padding: 8px; border: none; text-align: center; background: transparent;">
+      <strong>3. Patient Lesion Volumetric Progression Timeline</strong><br/>
+      <img src="assets/timeline.png" alt="Patient Progression Timeline" width="100%" style="border-radius: 8px; margin-top: 6px; border: 1px solid rgba(255,255,255,0.08);" />
+    </td>
+  </tr>
+</table>
 
 ---
 
