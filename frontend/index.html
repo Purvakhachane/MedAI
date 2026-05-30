@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAI Platform — AI-Powered Medical Image Analysis</title>
+  <meta name="description" content="Advanced AI-powered medical imaging platform for radiologists. DICOM analysis, organ segmentation, disease detection, Grad-CAM visualization, and AI report generation." />
+  <meta name="theme-color" content="#030712" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============================================================
+     Emergency Alert Panel
+     ============================================================ -->
+<div class="emergency-alert" id="emergency-alert" role="alert" aria-live="assertive">
+  <div class="emergency-header">
+    <div class="emergency-icon">🚨</div>
+    <div>
+      <div class="emergency-title" id="emergency-disease">Critical Finding Detected</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Emergency Alert · MedAI Platform</div>
+    </div>
+  </div>
+  <div class="emergency-confidence" id="emergency-confidence">97.8%</div>
+  <div class="emergency-body" id="emergency-message">
+    Critical finding detected with high confidence. Immediate clinical review required.
+  </div>
+  <div class="emergency-actions">
+    <button class="btn-critical" onclick="navigate('analysis')">View Analysis</button>
+    <button class="btn-dismiss" onclick="dismissAlert()">Dismiss</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     Voice Overlay
+     ============================================================ -->
+<div class="voice-overlay" id="voice-overlay" role="status">
+  <div class="voice-waveform">
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+  </div>
+  <div class="voice-status" id="voice-status">Listening...</div>
+  <div class="voice-transcript" id="voice-transcript"></div>
+</div>
+
+<!-- ============================================================
+     Toast Container
+     ============================================================ -->
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+<!-- ============================================================
+     App Layout
+     ============================================================ -->
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">🧬</div>
+        <div class="logo-text">
+          <div class="logo-title">MedAI Platform</div>
+          <div class="logo-subtitle">v1.0 · Clinical Edition</div>
+        </div>
+      </div>
+      <div class="system-status">
+        <div class="status-dot"></div>
+        <span>All Systems Operational</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item" data-page="home" id="nav-home">
+        <span class="nav-icon">🏠</span>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="upload" id="nav-upload">
+        <span class="nav-icon">📤</span>
+        Upload Scan
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px;">Analysis</div>
+      <div class="nav-item" data-page="analysis" id="nav-analysis">
+        <span class="nav-icon">🔬</span>
+        AI Analysis
+        <span class="nav-badge blue" id="findings-badge" style="display:none;">!</span>
+      </div>
+      <div class="nav-item" data-page="viewer" id="nav-viewer">
+        <span class="nav-icon">🖥️</span>
+        Medical Viewer
+      </div>
+      <div class="nav-item" data-page="reports" id="nav-reports">
+        <span class="nav-icon">📋</span>
+        AI Reports
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px;">Insights</div>
+      <div class="nav-item" data-page="timeline" id="nav-timeline">
+        <span class="nav-icon">📅</span>
+        Patient Timeline
+      </div>
+      <div class="nav-item" data-page="monitoring" id="nav-monitoring">
+        <span class="nav-icon">📊</span>
+        Monitoring
+        <span class="nav-badge amber">Live</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="voice-btn" id="voice-assistant-btn">
+        <span>🎤</span>
+        <span>Voice Assistant</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" role="main">
+    <!-- Header -->
+    <header class="top-header">
+      <div>
+        <div class="header-title" id="header-title">Dashboard Overview</div>
+        <div class="header-subtitle" id="header-subtitle">Real-time platform metrics and system status</div>
+      </div>
+      <div class="header-spacer"></div>
+      <div class="header-actions">
+        <div class="header-stat">
+          <span>🟢 GPU</span>
+          <span class="value" id="header-gpu">Online</span>
+        </div>
+        <div class="header-stat">
+          <span>⚡ Models</span>
+          <span class="value">4 Active</span>
+        </div>
+        <div class="alert-bell" id="alert-bell" onclick="triggerTestAlert()" title="Emergency Alerts">
+          🔔
+          <div class="alert-badge-dot" id="alert-badge"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Container -->
+    <div class="page-container" id="page-container">
+
+      <!-- ======================================================
+           HOME PAGE
+           ====================================================== -->
+      <section class="page active" id="page-home" aria-label="Dashboard">
+        <div class="page-header">
+          <div class="page-header-title">Clinical Dashboard</div>
+          <div class="page-header-sub">Real-time AI inference metrics and platform health</div>
+        </div>
+
+        <!-- Primary Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card cyan">
+            <div class="metric-header">
+              <div class="metric-icon cyan">🩻</div>
+              <div class="metric-change up">+12.4%</div>
+            </div>
+            <div class="metric-value" id="stat-total-scans">0</div>
+            <div class="metric-label">Total Scans Processed</div>
+          </div>
+          <div class="metric-card purple">
+            <div class="metric-header">
+              <div class="metric-icon purple">🔬</div>
+              <div class="metric-change up">+8.7%</div>
+            </div>
+            <div class="metric-value" id="stat-today-analyses">0</div>
+            <div class="metric-label">Today's AI Analyses</div>
+          </div>
+          <div class="metric-card emerald">
+            <div class="metric-header">
+              <div class="metric-icon emerald">🎯</div>
+              <div class="metric-change up">+0.3%</div>
+            </div>
+            <div class="metric-value" id="stat-model-accuracy">0%</div>
+            <div class="metric-label">Model Accuracy</div>
+          </div>
+          <div class="metric-card amber">
+            <div class="metric-header">
+              <div class="metric-icon amber">🚨</div>
+              <div class="metric-change neutral">Today</div>
+            </div>
+            <div class="metric-value" id="stat-alerts-today">0</div>
+            <div class="metric-label">Critical Alerts</div>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card blue">
+            <div class="metric-header">
+              <div class="metric-icon blue">⚡</div>
+              <div class="metric-change up">Fast</div>
+            </div>
+            <div class="metric-value" id="stat-inference-ms">0ms</div>
+            <div class="metric-label">Avg Inference Time</div>
+          </div>
+          <div class="metric-card cyan">
+            <div class="metric-header">
+              <div class="metric-icon cyan">👥</div>
+              <div class="metric-change up">+3.1%</div>
+            </div>
+            <div class="metric-value" id="stat-patients">0</div>
+            <div class="metric-label">Patients Monitored</div>
+          </div>
+          <div class="metric-card purple">
+            <div class="metric-header">
+              <div class="metric-icon purple">📋</div>
+              <div class="metric-change up">+22%</div>
+            </div>
+            <div class="metric-value" id="stat-reports">0</div>
+            <div class="metric-label">Reports Generated</div>
+          </div>
+          <div class="metric-card emerald">
+            <div class="metric-header">
+              <div class="metric-icon emerald">🤖</div>
+              <div class="metric-change neutral">Active</div>
+            </div>
+            <div class="metric-value" id="stat-active-models">0</div>
+            <div class="metric-label">AI Models Running</div>
+          </div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="section-row two-col">
+          <!-- Modality Breakdown -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">📊 Scan Modality Breakdown</div>
+              <div class="tag tag-cyan">Today</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                    <span>🩻 CT Scan</span><span class="tag tag-cyan" id="modality-pct-ct">48%</span>
+                  </div>
+                  <div class="progress-bar-wrap"><div class="progress-bar" id="modality-bar-ct" style="width:48%;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                    <span>🧲 MRI</span><span class="tag tag-purple" id="modality-pct-mri">30%</span>
+                  </div>
+                  <div class="progress-bar-wrap"><div class="progress-bar" id="modality-bar-mri" style="width:30%;background:var(--grad-purple)"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                    <span>☢️ X-Ray</span><span class="tag tag-amber" id="modality-pct-x-ray">14%</span>
+                  </div>
+                  <div class="progress-bar-wrap"><div class="progress-bar" id="modality-bar-x-ray" style="width:14%;background:var(--grad-amber)"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+                    <span>🔊 Ultrasound</span><span class="tag tag-emerald" id="modality-pct-ultrasound">8%</span>
+                  </div>
+                  <div class="progress-bar-wrap"><div class="progress-bar" id="modality-bar-ultrasound" style="width:8%;background:var(--grad-emerald)"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Pipeline Status -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">🤖 AI Pipeline Status</div>
+              <div class="status-dot" style="display:inline-block;"></div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-glass);border-radius:8px;border:1px solid var(--border-card);">
+                  <span style="font-size:13px;">🧠 SwinUNETR Segmentation</span>
+                  <span class="tag tag-emerald">● Running</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-glass);border-radius:8px;border:1px solid var(--border-card);">
+                  <span style="font-size:13px;">🔍 DenseNet-121 Detection</span>
+                  <span class="tag tag-emerald">● Running</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-glass);border-radius:8px;border:1px solid var(--border-card);">
+                  <span style="font-size:13px;">📝 GPT Medical Reporter</span>
+                  <span class="tag tag-emerald">● Running</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-glass);border-radius:8px;border:1px solid var(--border-card);">
+                  <span style="font-size:13px;">🗺️ Grad-CAM XAI Engine</span>
+                  <span class="tag tag-cyan">● Standby</span>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="btn-row">
+                <button class="btn-primary" onclick="navigate('upload')">📤 Upload Scan</button>
+                <button class="btn-secondary" onclick="navigate('monitoring')">📊 View Metrics</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================
+           UPLOAD PAGE
+           ====================================================== -->
+      <section class="page" id="page-upload" aria-label="Upload Scan">
+        <div class="page-header">
+          <div class="page-header-title">Upload Medical Scan</div>
+          <div class="page-header-sub">DICOM, PNG, or JPEG · Automatic metadata extraction and preprocessing</div>
+        </div>
+
+        <!-- Demo Modality Buttons -->
+        <div class="glass-card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">⚡ Quick Demo Scans</div>
+            <span style="font-size:12px;color:var(--text-muted);">No file required</span>
+          </div>
+          <div class="card-body">
+            <div class="modality-tabs">
+              <button class="modality-tab" onclick="loadDemoScan('CT')" id="demo-ct">🩻 CT Scan</button>
+              <button class="modality-tab" onclick="loadDemoScan('MRI')" id="demo-mri">🧠 MRI</button>
+              <button class="modality-tab" onclick="loadDemoScan('X-Ray')" id="demo-xray">☢️ X-Ray</button>
+              <button class="modality-tab" onclick="loadDemoScan('Ultrasound')" id="demo-us">🔊 Ultrasound</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload Zone -->
+        <input type="file" id="file-input" accept=".dcm,.png,.jpg,.jpeg,.nii,.gz" style="display:none;" />
+        <div class="upload-zone" id="upload-zone" role="button" aria-label="Upload DICOM scan" tabindex="0">
+          <span class="upload-icon">🩻</span>
+          <div class="upload-title">Drop Your Medical Scan Here</div>
+          <div class="upload-subtitle">or click to browse files from your computer</div>
+          <div class="upload-formats">
+            <span class="format-badge dcm">DICOM</span>
+            <span class="format-badge png">PNG</span>
+            <span class="format-badge jpg">JPEG</span>
+            <span class="format-badge nii">NIfTI</span>
+          </div>
+        </div>
+
+        <!-- Metadata & Preview Section -->
+        <div id="metadata-section" class="hidden" style="display:none;">
+          <div class="section-row two-col" style="margin-top:24px;">
+            <!-- Metadata -->
+            <div class="glass-card">
+              <div class="card-header">
+                <div class="card-title">📋 DICOM Metadata</div>
+                <span class="tag tag-emerald">✅ Extracted</span>
+              </div>
+              <div class="card-body" style="padding:0;">
+                <table class="metadata-table">
+                  <tbody id="metadata-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <!-- Scan Preview -->
+              <div class="glass-card" style="margin-bottom:16px;">
+                <div class="card-header">
+                  <div class="card-title">🖼️ Scan Preview</div>
+                  <span style="font-size:12px;color:var(--text-muted);">Preprocessed</span>
+                </div>
+                <div class="card-body" style="padding:12px;text-align:center;">
+                  <img id="scan-preview" src="" alt="Scan preview" style="width:100%;max-width:300px;border-radius:8px;display:none;border:1px solid var(--border-card);" />
+                  <canvas id="scan-preview-canvas" style="width:100%;max-width:300px;border-radius:8px;display:none;"></canvas>
+                </div>
+              </div>
+
+              <!-- Preprocessing -->
+              <div class="glass-card">
+                <div class="card-header">
+                  <div class="card-title">⚙️ Preprocessing Pipeline</div>
+                  <span class="tag tag-cyan">MONAI</span>
+                </div>
+                <div class="card-body" style="padding:0;">
+                  <table class="metadata-table">
+                    <tbody id="preprocessing-table-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row" style="margin-top:16px;">
+            <button class="btn-primary" id="run-analysis-btn" onclick="runAnalysis()">🔬 Run AI Analysis</button>
+            <button class="btn-secondary" onclick="navigate('viewer')">🖥️ Open Viewer</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================
+           ANALYSIS PAGE
+           ====================================================== -->
+      <section class="page" id="page-analysis" aria-label="AI Analysis">
+        <div class="page-header">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div class="page-header-title">AI Analysis Results</div>
+              <div class="page-header-sub">Disease detection · Organ segmentation · Explainable AI</div>
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary" onclick="runAnalysis()">🔄 Re-analyze</button>
+              <button class="btn-secondary" onclick="navigate('upload')">📤 New Scan</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="analysis-content">
+          <div class="empty-state">
+            <span class="icon">🔬</span>
+            <h3>No Analysis Yet</h3>
+            <p>Upload a scan and click "Run AI Analysis" to see results.</p>
+            <div style="margin-top:20px;">
+              <button class="btn-primary" onclick="navigate('upload')">📤 Upload Scan</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================
+           VIEWER PAGE
+           ====================================================== -->
+      <section class="page" id="page-viewer" aria-label="Medical Viewer">
+        <div class="page-header">
+          <div class="page-header-title">Medical Image Viewer</div>
+          <div class="page-header-sub">2D axial viewer · Interactive 3D reconstruction</div>
+        </div>
+
+        <div class="viewer-layout">
+          <!-- 2D Viewer -->
+          <div>
+            <div class="glass-card">
+              <div class="card-header">
+                <div class="card-title">🖥️ 2D Scan Viewer</div>
+                <div class="mpr-tabs">
+                  <button class="mpr-tab active" onclick="switchMPRPlane('axial')" id="mpr-axial">Axial</button>
+                  <button class="mpr-tab" onclick="switchMPRPlane('coronal')" id="mpr-coronal">Coronal</button>
+                  <button class="mpr-tab" onclick="switchMPRPlane('sagittal')" id="mpr-sagittal">Sagittal</button>
+                </div>
+              </div>
+              <div class="viewer-container">
+                <canvas id="scan-canvas" aria-label="2D medical scan viewer"></canvas>
+              </div>
+              <div class="viewer-toolbar">
+                <button class="tool-btn" onclick="zoomIn()" id="btn-zoom-in">🔍 Zoom In</button>
+                <button class="tool-btn" onclick="zoomOut()" id="btn-zoom-out">🔎 Zoom Out</button>
+                <button class="tool-btn" onclick="resetViewerZoom()" id="btn-reset">Reset</button>
+                <button class="tool-btn" onclick="toggleViewerGradcam()" id="btn-gradcam">🗺️ Grad-CAM</button>
+                <button class="tool-btn" onclick="toggleRulerMode()" id="btn-ruler">📏 Ruler</button>
+                <button class="tool-btn" onclick="toggleMaskOverlay()" id="btn-overlay-mask">🟢 Mask</button>
+                <button class="tool-btn" onclick="clearRulerMeasurements()" id="btn-clear-ruler" style="display:none; color:var(--accent-critical);">Clear 📏</button>
+                <div class="header-stat blend-control-wrap" id="blend-control" style="display:none; margin-left:8px; border:none; background:none;">
+                  <span style="font-size:10px; color:var(--text-secondary); white-space:nowrap;">Blend: <strong id="blend-opacity-val">50%</strong></span>
+                  <input type="range" class="blend-slider" id="blend-opacity-slider" min="10" max="100" value="50" style="width:60px;" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Window Level Controls -->
+            <div class="glass-card" style="margin-top:12px;">
+              <div class="card-header">
+                <div class="card-title">🎛️ Window Level</div>
+              </div>
+              <div class="window-control">
+                <div>
+                  <div class="wl-label">
+                    <span>Window Level (WL)</span>
+                    <span id="wl-value">50</span>
+                  </div>
+                  <input type="range" class="wl-slider" id="wl-slider" min="0" max="100" value="50" aria-label="Window Level" />
+                </div>
+                <div>
+                  <div class="wl-label">
+                    <span>Window Width (WW)</span>
+                    <span id="ww-value">80</span>
+                  </div>
+                  <input type="range" class="wl-slider" id="ww-slider" min="10" max="400" value="80" aria-label="Window Width" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3D Viewer -->
+          <div>
+            <div class="glass-card">
+              <div class="card-header">
+                <div class="card-title">🧊 3D Reconstruction</div>
+                <div style="display:flex;gap:6px;">
+                  <button class="organ-btn tool-btn active" data-organ="brain" onclick="switchOrgan('brain')" id="btn-organ-brain">🧠 Brain</button>
+                  <button class="organ-btn tool-btn" data-organ="lung" onclick="switchOrgan('lung')" id="btn-organ-lung">🫁 Lung</button>
+                  <button class="organ-btn tool-btn" data-organ="liver" onclick="switchOrgan('liver')" id="btn-organ-liver">🫀 Liver</button>
+                </div>
+              </div>
+              <div class="viewer-container" id="viewer-3d-container">
+                <div id="viewer-3d" aria-label="3D medical organ viewer" style="width:100%;height:100%;"></div>
+              </div>
+              <div class="viewer-toolbar">
+                <button class="tool-btn" onclick="resetCamera3D()">🔄 Reset</button>
+                <button class="tool-btn" onclick="showToast('Drag to rotate · Scroll to zoom', 'info')">ℹ️ Controls</button>
+                <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">🖱️ Drag to rotate · Scroll to zoom</span>
+              </div>
+            </div>
+
+            <!-- Organ Info Card -->
+            <div class="glass-card" style="margin-top:12px;">
+              <div class="card-header">
+                <div class="card-title">🎯 Detected Regions</div>
+                <span class="tag tag-critical">⚠️ Tumor</span>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+                    <span>🔴 Primary Tumor</span>
+                    <span style="color:var(--accent-critical);font-weight:600;">2.1 cm · Right lobe</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+                    <span>🟡 Suspicious Region</span>
+                    <span style="color:var(--accent-amber);font-weight:600;">0.8 cm · Monitor</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+                    <span>🟢 Normal Tissue</span>
+                    <span style="color:var(--accent-emerald);font-weight:600;">Healthy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================
+           REPORTS PAGE
+           ====================================================== -->
+      <section class="page" id="page-reports" aria-label="AI Reports">
+        <div class="page-header">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <div class="page-header-title">AI-Generated Reports</div>
+              <div class="page-header-sub">LLM-powered diagnostic reports · Download as PDF/Markdown</div>
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary" onclick="renderReport()">🔄 Refresh Report</button>
+              <button class="btn-secondary" onclick="downloadReport()">⬇️ Download .md</button>
+              <button class="btn-secondary" onclick="window.print()">🖨️ Print / PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-row main-sidebar">
+          <div class="report-scroll" id="report-container">
+            <div class="empty-state">
+              <span class="icon">📋</span>
+              <h3>No Report Generated</h3>
+              <p>Run an AI analysis first to generate a medical report.</p>
+              <div style="margin-top:20px;">
+                <button class="btn-primary" onclick="navigate('analysis')">🔬 Go to Analysis</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Report Info -->
+            <div class="glass-card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title">ℹ️ Report Info</div>
+              </div>
+              <div class="card-body">
+                <table class="metadata-table">
+                  <tr><td>Generated by</td><td>GPT-Medical-3.5</td></tr>
+                  <tr><td>Segmentation</td><td>SwinUNETR v2.1</td></tr>
+                  <tr><td>Detection</td><td>DenseNet-121</td></tr>
+                  <tr><td>Standard</td><td>HL7 FHIR R4</td></tr>
+                  <tr><td>Validation</td><td>Radiologist review required</td></tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Multi-disease summary -->
+            <div class="glass-card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title">🔢 Multi-Disease Summary</div>
+              </div>
+              <div class="card-body" id="report-findings-summary">
+                <div style="color:var(--text-muted);font-size:13px;">Run analysis to see findings.</div>
+              </div>
+            </div>
+
+            <!-- AI Medical Co-Pilot Chat -->
+            <div class="copilot-card">
+              <div class="copilot-header">
+                <div style="font-size:18px;">🤖</div>
+                <div>
+                  <div class="copilot-title">MedAI Co-Pilot</div>
+                  <div class="copilot-subtitle">Clinical Diagnostic Assistant</div>
+                </div>
+              </div>
+              <div class="copilot-chat-history" id="copilot-chat-history">
+                <div class="copilot-message ai">
+                  Hello! I am your MedAI Co-Pilot. Ask me any clinical questions about this patient's scan, diagnostic findings, or treatment recommendations.
+                </div>
+              </div>
+              <div class="copilot-suggestions">
+                <button class="copilot-suggest-btn" onclick="sendCopilotSuggestion('Summarize the primary abnormalities.')">Abnormalities?</button>
+                <button class="copilot-suggest-btn" onclick="sendCopilotSuggestion('What are the recommended clinical next steps?')">Next Steps?</button>
+                <button class="copilot-suggest-btn" onclick="sendCopilotSuggestion('Explain the SwinUNETR AI model architecture.')">AI Info?</button>
+              </div>
+              <div class="copilot-input-area">
+                <input type="text" class="copilot-chat-input" id="copilot-chat-input" placeholder="Ask Co-Pilot about scan..." onkeydown="if(event.key === 'Enter') sendCopilotQuery()" />
+                <button class="copilot-send-btn" onclick="sendCopilotQuery()">▶</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================
+           MONITORING PAGE
+           ====================================================== -->
+      <section class="page" id="page-monitoring" aria-label="System Monitoring">
+        <div class="page-header">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div class="page-header-title">System Monitoring</div>
+              <div class="page-header-sub">Live GPU usage · Inference latency · Model performance</div>
+            </div>
+            <div class="tag tag-emerald" style="animation:pulse 2s infinite;">● Live</div>
+          </div>
+        </div>
+
+        <!-- GPU Arc Card + Metrics -->
+        <div class="monitor-grid">
+          <!-- GPU Arc -->
+          <div class="monitor-metric">
+            <div class="gpu-arc">
+              <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <defs>
+                  <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#06b6d4"/>
+                    <stop offset="100%" stop-color="#6366f1"/>
+                  </linearGradient>
+                </defs>
+                <circle class="arc-bg" cx="50" cy="50" r="44" />
+                <circle class="arc-fill" cx="50" cy="50" r="44" id="gpu-arc-fill"
+                  stroke-dasharray="276.46" stroke-dashoffset="100"/>
+              </svg>
+              <div class="arc-text gpu-arc">
+                <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;background:var(--grad-cyan);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="gpu-arc-text">—</div>
+                <div style="font-size:10px;color:var(--text-muted);">GPU</div>
+              </div>
+            </div>
+            <div class="monitor-value" id="mon-gpu-usage">—</div>
+            <div class="monitor-label">GPU Utilization</div>
+          </div>
+          <div class="monitor-metric">
+            <div class="monitor-value" id="mon-latency">—</div>
+            <div class="monitor-label">Avg Inference Latency</div>
+            <div class="mini-chart" id="latency-chart" style="margin-top:12px;"></div>
+          </div>
+          <div class="monitor-metric">
+            <div class="monitor-value" id="mon-accuracy">—</div>
+            <div class="monitor-label">Model Accuracy</div>
+          </div>
+          <div class="monitor-metric">
+            <div class="monitor-value" id="mon-gpu-mem">—</div>
+            <div class="monitor-label">GPU Memory Used</div>
+          </div>
+          <div class="monitor-metric">
+            <div class="monitor-value" id="mon-throughput">—</div>
+            <div class="monitor-label">Throughput</div>
+            <div class="mini-chart" id="gpu-chart" style="margin-top:12px;"></div>
+          </div>
+          <div class="monitor-metric">
+            <div class="monitor-value" id="mon-inferences">—</div>
+            <div class="monitor-label">Inferences Today</div>
+          </div>
+        </div>
+
+        <div class="section-row two-col">
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">📡 Additional Metrics</div>
+            </div>
+            <div class="card-body">
+              <table class="metadata-table">
+                <tr><td>Uptime</td><td id="mon-uptime">—</td></tr>
+                <tr><td>Error Rate</td><td id="mon-error-rate">—</td></tr>
+                <tr><td>Active Endpoints</td><td id="mon-endpoints">3</td></tr>
+                <tr><td>GPU Model</td><td>NVIDIA A100 (simulated)</td></tr>
+                <tr><td>CUDA Version</td><td>12.1</td></tr>
+                <tr><td>Serving Framework</td><td>Databricks Model Serving</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">📜 Inference Logs</div>
+              <span class="tag tag-cyan">Live</span>
+            </div>
+            <div class="log-container" id="log-container" aria-label="Inference logs">
+              <div style="color:var(--text-muted);font-size:12px;">Loading logs...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================
+           TIMELINE PAGE
+           ====================================================== -->
+      <section class="page" id="page-timeline" aria-label="Patient Timeline">
+        <div class="page-header">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div class="page-header-title">Patient Timeline</div>
+              <div class="page-header-sub">Disease progression · Treatment monitoring · Historical scans</div>
+            </div>
+            <div class="header-stat">
+              <span>Patient</span>
+              <span class="value" id="timeline-patient-id">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-row two-col">
+          <!-- Timeline -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">📅 Scan History</div>
+            </div>
+            <div class="card-body">
+              <div class="timeline-wrapper">
+                <div class="timeline-line"></div>
+                <div id="timeline-entries">
+                  <div style="color:var(--text-muted);font-size:13px;">Loading timeline...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Progression Chart -->
+            <div class="glass-card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title">📈 Lesion Progression</div>
+                <span class="tag tag-amber">Monitoring</span>
+              </div>
+              <div id="progression-chart" style="padding:16px;"></div>
+            </div>
+
+            <!-- Summary -->
+            <div class="glass-card">
+              <div class="card-header">
+                <div class="card-title">📋 Clinical Summary</div>
+              </div>
+              <div class="card-body" id="timeline-summary">
+                <div style="color:var(--text-muted);font-size:13px;">Loading summary...</div>
+              </div>
+            </div>
+
+            <!-- Comparison Mode -->
+            <div class="glass-card" style="margin-top:16px;">
+              <div class="card-header">
+                <div class="card-title">🔄 Scan Comparison</div>
+              </div>
+              <div class="card-body">
+                <div class="comparison-wrap">
+                  <div style="position:relative;">
+                    <div class="comparison-label">Jan 2025</div>
+                    <div style="background:var(--bg-glass);border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-card);">
+                      <canvas id="compare-canvas-left" style="width:100%;height:100%;border-radius:8px;"></canvas>
+                    </div>
+                  </div>
+                  <div style="position:relative;">
+                    <div class="comparison-label" style="right:12px;left:auto;">Jun 2025</div>
+                    <div style="background:var(--bg-glass);border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-card);">
+                      <canvas id="compare-canvas-right" style="width:100%;height:100%;border-radius:8px;"></canvas>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;">
+                  Tumor growth: <strong style="color:var(--accent-critical);">+0.8 cm (+38%)</strong> over 6 months
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /page-container -->
+  </main>
+</div><!-- /app-layout -->
+
+<script src="voice.js"></script>
+<script src="viewer3d.js"></script>
+<script src="app.js"></script>
+
+<script>
+  // Initialize comparison canvases after load
+  window.addEventListener('load', () => {
+    ['compare-canvas-left', 'compare-canvas-right'].forEach((id, i) => {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 200;
+      canvas.height = 200;
+      // Slightly different synthetic scans
+      const oldState = { canvasScale: 1, canvasOffsetX: 0, canvasOffsetY: 0, brightness: 100, contrast: 100,
+        windowLevel: 50, windowWidth: 80, isDragging: false, showGradcam: i === 1,
+        currentMetadata: { modality: 'CT', acquisition_date: i === 0 ? '2025-01-15' : '2025-06-22' } };
+      // Draw synthetic scan
+      const oc = canvas.getContext('2d');
+      oc.fillStyle = '#111';
+      oc.fillRect(0, 0, 200, 200);
+      const cx = 100, cy = 100;
+      const bg = oc.createRadialGradient(cx, cy, 0, cx, cy, 90);
+      bg.addColorStop(0, 'rgba(80,80,80,0.6)');
+      bg.addColorStop(1, 'rgba(20,20,20,0)');
+      oc.beginPath(); oc.ellipse(cx, cy, 84, 80, 0, 0, Math.PI*2);
+      oc.fillStyle = bg; oc.fill();
+      for (const lx of [cx-36, cx+36]) {
+        oc.beginPath(); oc.ellipse(lx, cy, 24, 36, 0, 0, Math.PI*2);
+        oc.fillStyle = 'rgba(10,10,10,0.9)'; oc.fill();
+      }
+      // Tumor (larger on right = June)
+      const tr = i === 0 ? 8 : 12;
+      const tg = oc.createRadialGradient(cx+30, cy-20, 0, cx+30, cy-20, tr);
+      tg.addColorStop(0, 'rgba(255,60,0,0.9)');
+      tg.addColorStop(1, 'rgba(255,60,0,0)');
+      oc.beginPath(); oc.arc(cx+30, cy-20, tr, 0, Math.PI*2);
+      oc.fillStyle = tg; oc.fill();
+      // Date label
+      oc.fillStyle = 'rgba(6,182,212,0.8)';
+      oc.font = '9px monospace';
+      oc.fillText(i === 0 ? '2025-01-15' : '2025-06-22', 4, 14);
+      oc.fillText('CT', 4, 26);
+    });
+  });
+</script>
+
+</body>
+</html>
